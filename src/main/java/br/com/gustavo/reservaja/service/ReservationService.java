@@ -11,7 +11,9 @@ import br.com.gustavo.reservaja.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ReservationService {
@@ -45,4 +47,16 @@ public class ReservationService {
         Reservation saved = repository.save(reservation);
         return new ReservationResponseDto(saved.getId(), saved.getRoom().getId(), saved.getStartAt(), saved.getEndAt());
     }
+
+    public List<ReservationResponseDto> listAllReservations() {
+        List<ReservationResponseDto> listReservations = repository.findAll()
+                .stream()
+                .map(r -> new ReservationResponseDto(r.getId(), r.getRoom().getId(), r.getStartAt(), r.getEndAt()))
+                .collect(Collectors.toList());
+
+        return listReservations;
+    }
 }
+
+
+//TODO: corrigir o caso extremo em que endAt == startAt está sendo considerado um conflito (EDGE CASE)
