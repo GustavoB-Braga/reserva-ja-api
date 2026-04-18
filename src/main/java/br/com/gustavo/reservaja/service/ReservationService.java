@@ -11,6 +11,7 @@ import br.com.gustavo.reservaja.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -28,21 +29,22 @@ public class ReservationService {
     UserRepository userRepository;
 
     public ReservationResponseDto createReservation(ReservationRequestDto dto) {
-
+        LocalDateTime start = dto.startAt().withNano(0);
+        LocalDateTime end = dto.endAt().withNano(0);
 
         Room room = roomRepository.findById(dto.roomId()).orElseThrow(() -> new RuntimeException("Room not found"));
         User user = userRepository.findById(1L).orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (dto.startAt().isAfter(dto.endAt())) {
+        if (start.isAfter(end)) {
             throw new RuntimeException("Invalid time range");
         }
 
-        if (repository.existsByRoomAndStartAtLessThanAndEndAtGreaterThan(room, dto.endAt(), dto.startAt())) {
+        if (repository.existsByRoomAndStartAtLessThanAndEndAtGreaterThan(room, end, start)) {
             throw new RuntimeException("Time is already booked");
         }
 
 
-        Reservation reservation = new Reservation(user, room, dto.startAt(), dto.endAt());
+        Reservation reservation = new Reservation(user, room, start, end);
 
         Reservation saved = repository.save(reservation);
         return new ReservationResponseDto(saved.getId(), saved.getRoom().getId(), saved.getStartAt(), saved.getEndAt());
@@ -57,6 +59,3 @@ public class ReservationService {
         return listReservations;
     }
 }
-
-
-//TODO: corrigir o caso extremo em que endAt == startAt está sendo considerado um conflito (EDGE CASE)
