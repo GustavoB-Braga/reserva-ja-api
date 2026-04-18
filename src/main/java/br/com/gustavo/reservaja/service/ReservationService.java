@@ -2,6 +2,8 @@ package br.com.gustavo.reservaja.service;
 
 import br.com.gustavo.reservaja.dto.ReservationResponseDto;
 import br.com.gustavo.reservaja.dto.reservation.ReservationRequestDto;
+import br.com.gustavo.reservaja.exception.BusinessException;
+import br.com.gustavo.reservaja.exception.ResourceNotFoundException;
 import br.com.gustavo.reservaja.model.Reservation;
 import br.com.gustavo.reservaja.model.Room;
 import br.com.gustavo.reservaja.model.User;
@@ -13,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,15 +33,15 @@ public class ReservationService {
         LocalDateTime start = dto.startAt().withNano(0);
         LocalDateTime end = dto.endAt().withNano(0);
 
-        Room room = roomRepository.findById(dto.roomId()).orElseThrow(() -> new RuntimeException("Room not found"));
-        User user = userRepository.findById(1L).orElseThrow(() -> new RuntimeException("User not found"));
+        Room room = roomRepository.findById(dto.roomId()).orElseThrow(() -> new ResourceNotFoundException("Room not found"));
+        User user = userRepository.findById(1L).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (start.isAfter(end)) {
-            throw new RuntimeException("Invalid time range");
+            throw new BusinessException("Invalid time range");
         }
 
         if (repository.existsByRoomAndStartAtLessThanAndEndAtGreaterThan(room, end, start)) {
-            throw new RuntimeException("Time is already booked");
+            throw new BusinessException("Time is already booked");
         }
 
 
